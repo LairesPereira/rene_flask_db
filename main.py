@@ -5,13 +5,11 @@ from flask import *
 from dao import *
 
 app = Flask(__name__)
+app.secret_key = 'cajuina'
 
 @app.route("/")
 def home():
     return render_template('index.html')
-
-
-
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -21,13 +19,24 @@ def login():
     conexao = conectardb()
     tupla = listarUsuarios(conexao)
 
-
     for usuario in tupla:
-        if(login == usuario[1] and senha == usuario[2]):
-            return '<h1>LOGIN REALIZADO COM SUCESSO</h1>'
+        if(login == usuario[0] and senha == usuario[1]):
+            session['usuario'] = login
+            return render_template('menu.html', usuario=login)
 
-    return '<h1>LOGIN OU SENHA ERRADOS</h1>'
+    return render_template('errologin.html')
 
+@app.route("/cadastrar", methods=["POST"])
+def cadastrarusuario():
+    login = str(request.form.get('email'))
+    senha = str(request.form.get('pswd'))
+    nome = str(request.form.get('txt'))
+
+    conexao = conectardb()
+    if inserirDB(login, senha, nome, conexao):
+        return render_template('index.html')
+    else:
+        return render_template('errocadastro.html')
 
 if __name__ == "__main__":
     app.run(debug=True)
